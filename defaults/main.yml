@@ -41,10 +41,10 @@ _golang_goroot_by_manager:
 golang_goroot: "{{ _golang_goroot_by_manager[golang_package_manager] }}"
 
 # GOPATH: user workspace for go modules, packages, build artifacts.
-golang_gopath: "{{ (ansible_user_home | default(lookup('env', 'HOME'))) }}/go"
+golang_gopath: "{{ ansible_user_home }}/go"
 
 # GOBIN: where `go install` puts binaries.
-golang_gobin: "{{ (ansible_user_home | default(lookup('env', 'HOME'))) }}/go/bin"
+golang_gobin: "{{ ansible_user_home }}/go/bin"
 
 # ---------------------------------------------------------------------------
 # Tarball-specific configuration
@@ -52,6 +52,10 @@ golang_gobin: "{{ (ansible_user_home | default(lookup('env', 'HOME'))) }}/go/bin
 
 # Mirror URL for Go tarball downloads.
 golang_tarball_mirror: "https://go.dev/dl"
+
+# Checksum mirror URL. go.dev/dl uses HTML meta-refresh for .sha256 files
+# which Ansible cannot follow. The actual checksums live on the Google CDN.
+golang_tarball_checksum_mirror: "https://dl.google.com/go"
 
 # Installation directory for tarball method (extracted here).
 golang_tarball_install_dir: "/usr/local/go"
@@ -69,13 +73,13 @@ golang_os_map:
   Linux: "linux"
 
 # Derived tarball filename (used internally by install-tarball.yml).
-golang_tarball_filename: "go{{ golang_version }}.{{ golang_os_map[ansible_system | default('Linux')] }}-{{ golang_arch_map[ansible_architecture | default('x86_64')] }}.tar.gz"
+golang_tarball_filename: "go{{ golang_version }}.{{ golang_os_map[ansible_system] }}-{{ golang_arch_map[ansible_architecture] }}.tar.gz"
 
 # Derived tarball URL.
 golang_tarball_url: "{{ golang_tarball_mirror }}/{{ golang_tarball_filename }}"
 
 # Directory for downloaded tarballs.
-golang_tarball_download_dir: "{{ (ansible_user_home | default(lookup('env', 'HOME'))) }}/.ansible/tmp/downloads"
+golang_tarball_download_dir: "{{ ansible_user_home }}/.ansible/tmp/downloads"
 
 # ---------------------------------------------------------------------------
 # Uninstall options
@@ -148,4 +152,4 @@ golang_shell_env:
 # Catches L9 (cache path coupling).
 # disk-cleanup should reference this instead of hardcoding.
 
-golang_cache_dir: "{{ ((ansible_system | default('Linux')) == 'Darwin') | ternary((ansible_user_home | default(lookup('env', 'HOME'))) + '/Library/Caches/go-build', (ansible_user_home | default(lookup('env', 'HOME'))) + '/.cache/go-build') }}"
+golang_cache_dir: "{{ (ansible_system == 'Darwin') | ternary(ansible_user_home + '/Library/Caches/go-build', ansible_user_home + '/.cache/go-build') }}"

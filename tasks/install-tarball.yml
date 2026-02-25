@@ -27,7 +27,7 @@
 
 - name: Fetch Go tarball checksum
   ansible.builtin.uri:
-    url: "{{ golang_tarball_url }}.sha256"
+    url: "{{ golang_tarball_checksum_mirror }}/{{ golang_tarball_filename }}.sha256"
     return_content: true
   register: golang_checksum_result
   when: not (_golang_tarball_skip | bool)
