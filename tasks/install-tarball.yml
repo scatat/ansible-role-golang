@@ -25,11 +25,18 @@
     mode: "0755"
   when: not (_golang_tarball_skip | bool)
 
+- name: Fetch Go tarball checksum
+  ansible.builtin.uri:
+    url: "{{ golang_tarball_url }}.sha256"
+    return_content: true
+  register: golang_checksum_result
+  when: not (_golang_tarball_skip | bool)
+
 - name: Download Go tarball
   ansible.builtin.get_url:
     url: "{{ golang_tarball_url }}"
     dest: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}"
-    checksum: "sha256:{{ golang_tarball_url }}.sha256"
+    checksum: "sha256:{{ golang_checksum_result.content | trim | split(' ') | first }}"
     mode: "0644"
   register: golang_download
   when: not (_golang_tarball_skip | bool)
