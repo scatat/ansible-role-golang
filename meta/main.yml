@@ -3,6 +3,7 @@
 # Galaxy metadata for scatat.golang
 
 galaxy_info:
+  namespace: scatat
   role_name: golang
   author: "Stephen Tan (scatat)"
   description: >
