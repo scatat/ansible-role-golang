@@ -76,7 +76,7 @@ argument_specs:
         type: path
         description: >-
           Directory for downloaded tarballs. Defaults to
-          {{ ansible_user_home }}/.ansible/tmp/downloads at runtime.
+          ~/. ansible/tmp/downloads at runtime (derived from ansible_user_home).
 
       golang_clean_cache_on_uninstall:
         type: bool
