@@ -65,7 +65,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: pip3 install molecule ansible
+        run: pip3 install molecule molecule-plugins ansible
 
       - name: Run Molecule
         run: molecule test -s ${{ matrix.scenario }}
