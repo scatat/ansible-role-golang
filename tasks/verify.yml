@@ -14,7 +14,7 @@
 - name: "V2: go version meets minimum (>= {{ golang_minimum_version }})"
   # Catches L6: version currency
   ansible.builtin.shell: |
-    set -e
+    set -eo pipefail
     version=$(go version | grep -oE 'go1\.([0-9]+)' | head -1 | sed 's/go1\.//')
     minimum=$(echo "{{ golang_minimum_version }}" | sed 's/1\.//')
     if [ "$version" -lt "$minimum" ]; then
@@ -22,6 +22,8 @@
       exit 1
     fi
     echo "OK: go1.${version} >= minimum 1.${minimum}"
+  args:
+    executable: /bin/bash
   register: v2_version_check
   changed_when: false
   failed_when: v2_version_check.rc != 0

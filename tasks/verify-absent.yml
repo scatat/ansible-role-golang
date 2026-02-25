@@ -38,8 +38,8 @@
   when: golang_package_manager == 'apt'
   tags: [verify]
 
-- name: "U2: Go dnf package absent"
-  # Catches L8: uninstall completeness
+- name: "U2: Go dnf package absent"  # noqa: command-instead-of-module
+  # Catches L8: uninstall completeness — rpm -q is the correct tool for absence check
   ansible.builtin.command: rpm -q golang
   register: u2_dnf_check
   changed_when: false
