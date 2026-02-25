@@ -1,0 +1,22 @@
+---
+# roles/golang/tasks/uninstall-homebrew.yml
+# Uninstall Go via Homebrew.
+# Catches L8: uninstall completeness.
+
+- name: Uninstall Go via Homebrew
+  community.general.homebrew:
+    name: go
+    state: absent
+  when: ansible_system == 'Darwin'
+
+- name: Clean Go build cache
+  ansible.builtin.file:
+    path: "{{ golang_cache_dir }}"
+    state: absent
+  when: golang_clean_cache_on_uninstall
+
+- name: Clean Go module cache
+  ansible.builtin.file:
+    path: "{{ golang_gopath }}/pkg/mod"
+    state: absent
+  when: golang_clean_cache_on_uninstall

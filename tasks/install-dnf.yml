@@ -1,0 +1,22 @@
+---
+# roles/golang/tasks/install-dnf.yml
+# Install Go via dnf (RHEL/Rocky/Alma/Fedora).
+# Catches L5: package manager assumption, L10: version opacity.
+#
+# NOTE: Distro packages ship the version packaged by the distribution,
+# which often lags 1-2 major releases behind upstream. For exact version
+# control, use golang_package_manager: tarball instead.
+
+- name: Fail if not RedHat family and dnf selected
+  ansible.builtin.fail:
+    msg: >
+      golang_package_manager is 'dnf' but ansible_os_family is '{{ ansible_os_family }}'.
+      dnf is only available on RHEL/Rocky/Alma/Fedora. Use golang_package_manager: tarball for other platforms.
+  when: ansible_os_family != 'RedHat'
+
+- name: "{{ (golang_state == 'latest') | ternary('Upgrade', 'Install') }} Go via dnf"
+  ansible.builtin.dnf:
+    name: golang
+    state: "{{ golang_state }}"
+  become: true
+  when: ansible_os_family == 'RedHat'

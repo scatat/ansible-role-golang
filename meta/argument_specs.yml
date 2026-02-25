@@ -1,0 +1,110 @@
+---
+# roles/golang/meta/argument_specs.yml
+# Ansible 2.11+ built-in argument validation.
+# Validates role inputs before any task runs.
+
+argument_specs:
+  main:
+    short_description: Install and configure the Go language SDK.
+    options:
+      golang_enabled:
+        type: bool
+        default: true
+        description: Enable or disable the role entirely.
+
+      golang_state:
+        type: str
+        default: present
+        choices:
+          - present
+          - latest
+          - absent
+        description: >
+          Desired state. 'present' installs Go if missing, 'latest' installs
+          or upgrades to newest available, 'absent' uninstalls it.
+
+      golang_package_manager:
+        type: str
+        default: homebrew
+        choices:
+          - homebrew
+          - tarball
+          - apt
+          - dnf
+        description: >
+          Package manager for installation. 'homebrew' (macOS, latest stable),
+          'apt' (Debian/Ubuntu, distro version), 'dnf' (RHEL/Rocky/Fedora,
+          distro version), 'tarball' (any platform, exact version control).
+          Add tasks/install-<manager>.yml and tasks/uninstall-<manager>.yml
+          to support new providers.
+
+      golang_version:
+        type: str
+        default: "1.26.0"
+        description: >
+          Go version for tarball downloads. Ignored when using homebrew
+          (which tracks latest stable).
+
+      golang_minimum_version:
+        type: str
+        default: "1.22"
+        description: >
+          Minimum acceptable Go version for verify assertions (V2).
+
+      golang_gopath:
+        type: path
+        default: "{{ ansible_user_home }}/go"
+        description: >
+          GOPATH directory for modules, packages, and build artifacts.
+
+      golang_gobin:
+        type: path
+        default: "{{ ansible_user_home }}/go/bin"
+        description: >
+          GOBIN directory where 'go install' places binaries.
+
+      golang_tarball_mirror:
+        type: str
+        default: "https://go.dev/dl"
+        description: Mirror URL for Go tarball downloads.
+
+      golang_tarball_install_dir:
+        type: path
+        default: /usr/local/go
+        description: >
+          Installation directory for the tarball method.
+
+      golang_tarball_download_dir:
+        type: path
+        default: "{{ ansible_user_home }}/.ansible/tmp/downloads"
+        description: Directory for downloaded tarballs.
+
+      golang_clean_cache_on_uninstall:
+        type: bool
+        default: true
+        description: >
+          Remove the go-build cache directory on uninstall.
+
+      golang_extra_env:
+        type: dict
+        default: {}
+        description: >
+          Additional environment variables merged into golang_shell_env.vars.
+          Example: {GOPROXY: "https://proxy.golang.org,direct"}
+
+      golang_arch_map:
+        type: dict
+        default:
+          x86_64: amd64
+          arm64: arm64
+          aarch64: arm64
+        description: >
+          Mapping from ansible_architecture to Go arch string.
+
+      golang_os_map:
+        type: dict
+        default:
+          Darwin: darwin
+          Linux: linux
+        description: >
+          Mapping from ansible_system to Go OS string.

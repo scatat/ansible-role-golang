@@ -1,0 +1,84 @@
+---
+# roles/golang/tasks/verify.yml
+# Assertion-driven verification for Go installation.
+# Pattern: docs/05-ASSERTION-FRAMEWORK.md
+# Every V-assertion maps to an L (leaky abstraction) in README.md.
+
+- name: "V1: go binary is executable"
+  # Catches L1: Go binary in PATH
+  ansible.builtin.command: go version
+  register: v1_go_version
+  changed_when: false
+  failed_when: v1_go_version.rc != 0
+  tags: [verify]
+
+- name: "V2: go version meets minimum (>= {{ golang_minimum_version }})"
+  # Catches L6: version currency
+  ansible.builtin.shell: |
+    set -e
+    version=$(go version | grep -oE 'go1\.([0-9]+)' | head -1 | sed 's/go1\.//')
+    minimum=$(echo "{{ golang_minimum_version }}" | sed 's/1\.//')
+    if [ "$version" -lt "$minimum" ]; then
+      echo "FAIL: go1.${version} < minimum 1.${minimum}"
+      exit 1
+    fi
+    echo "OK: go1.${version} >= minimum 1.${minimum}"
+  register: v2_version_check
+  changed_when: false
+  failed_when: v2_version_check.rc != 0
+  tags: [verify]
+
+- name: "V3: GOROOT contains go binary"
+  # Catches L2: GOROOT location mismatch
+  ansible.builtin.stat:
+    path: "{{ golang_goroot }}/bin/go"
+  register: v3_goroot_bin
+  failed_when: not v3_goroot_bin.stat.exists
+  tags: [verify]
+
+- name: "V4: GOPATH directory exists"
+  # Catches L3: GOPATH/GOBIN dirs never created
+  ansible.builtin.stat:
+    path: "{{ golang_gopath }}"
+  register: v4_gopath
+  failed_when: not v4_gopath.stat.exists or not v4_gopath.stat.isdir
+  tags: [verify]
+
+- name: "V5: GOBIN directory exists"
+  # Catches L3: GOPATH/GOBIN dirs never created
+  ansible.builtin.stat:
+    path: "{{ golang_gobin }}"
+  register: v5_gobin
+  failed_when: not v5_gobin.stat.exists or not v5_gobin.stat.isdir
+  tags: [verify]
+
+- name: "V6: go binary architecture matches host"
+  # Catches L7: tarball arch mismatch
+  ansible.builtin.command: go env GOARCH
+  register: v6_goarch
+  changed_when: false
+  failed_when: v6_goarch.stdout | trim != golang_arch_map[ansible_architecture]
+  tags: [verify]
+
+- name: "V7: go binary at expected GOROOT"
+  # Catches L5: package manager assumption
+  ansible.builtin.command: go env GOROOT
+  register: v7_goroot
+  changed_when: false
+  failed_when: v7_goroot.stdout | trim | regex_replace('/$', '') != golang_goroot
+  tags: [verify]
+
+- name: "VERIFY COMPLETE — golang"
+  ansible.builtin.debug:
+    msg:
+      - "============================================"
+      - "  golang VERIFICATION COMPLETE"
+      - "============================================"
+      - "  V1  go binary executable:       ✅  {{ v1_go_version.stdout }}"
+      - "  V2  version >= {{ golang_minimum_version }}:            ✅  {{ v2_version_check.stdout }}"
+      - "  V3  GOROOT has bin/go:           ✅  {{ golang_goroot }}/bin/go"
+      - "  V4  GOPATH exists:               ✅  {{ golang_gopath }}"
+      - "  V5  GOBIN exists:                ✅  {{ golang_gobin }}"
+      - "  V6  arch matches host:           ✅  {{ v6_goarch.stdout | trim }}"
+      - "  V7  GOROOT matches expected:     ✅  {{ v7_goroot.stdout | trim }}"
+  tags: [verify]

@@ -1,0 +1,10 @@
+---
+# roles/golang/.ansible-lint
+
+profile: production
+
+skip_list:
+  - name[template]  # We use dynamic include_tasks with variable filenames
+
+warn_list:
+  - experimental

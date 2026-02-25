@@ -1,0 +1,23 @@
+---
+# roles/golang/tasks/uninstall-dnf.yml
+# Uninstall Go installed via dnf.
+# Catches L8: uninstall completeness.
+
+- name: Remove Go via dnf
+  ansible.builtin.dnf:
+    name: golang
+    state: absent
+    autoremove: true
+  become: true
+
+- name: Clean Go build cache
+  ansible.builtin.file:
+    path: "{{ golang_cache_dir }}"
+    state: absent
+  when: golang_clean_cache_on_uninstall
+
+- name: Clean Go module cache
+  ansible.builtin.file:
+    path: "{{ golang_gopath }}/pkg/mod"
+    state: absent
+  when: golang_clean_cache_on_uninstall

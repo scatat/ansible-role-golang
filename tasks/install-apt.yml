@@ -1,0 +1,23 @@
+---
+# roles/golang/tasks/install-apt.yml
+# Install Go via apt (Debian/Ubuntu).
+# Catches L5: package manager assumption, L10: version opacity.
+#
+# NOTE: Distro packages ship the version packaged by the distribution,
+# which often lags 1-2 major releases behind upstream. For exact version
+# control, use golang_package_manager: tarball instead.
+
+- name: Fail if not Debian/Ubuntu and apt selected
+  ansible.builtin.fail:
+    msg: >
+      golang_package_manager is 'apt' but ansible_os_family is '{{ ansible_os_family }}'.
+      apt is only available on Debian/Ubuntu. Use golang_package_manager: tarball for other platforms.
+  when: ansible_os_family != 'Debian'
+
+- name: "{{ (golang_state == 'latest') | ternary('Upgrade', 'Install') }} Go via apt"
+  ansible.builtin.apt:
+    name: golang-go
+    state: "{{ golang_state }}"
+    update_cache: "{{ golang_state == 'latest' }}"
+  become: true
+  when: ansible_os_family == 'Debian'

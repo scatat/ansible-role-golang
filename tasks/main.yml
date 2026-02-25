@@ -1,0 +1,47 @@
+---
+# roles/golang/tasks/main.yml
+# Orchestrator: dispatches to install/uninstall based on golang_state.
+
+- name: "Install/upgrade Go ({{ golang_package_manager }})"
+  ansible.builtin.include_tasks: "install-{{ golang_package_manager }}.yml"
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+
+- name: Ensure GOPATH directory exists
+  ansible.builtin.file:
+    path: "{{ golang_gopath }}"
+    state: directory
+    mode: "0755"
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+
+- name: Ensure GOBIN directory exists
+  ansible.builtin.file:
+    path: "{{ golang_gobin }}"
+    state: directory
+    mode: "0755"
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+
+- name: "Uninstall Go ({{ golang_package_manager }})"
+  ansible.builtin.include_tasks: "uninstall-{{ golang_package_manager }}.yml"
+  when:
+    - golang_enabled
+    - golang_state == 'absent'
+
+- name: Verify Go installation
+  ansible.builtin.include_tasks: verify.yml
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+  tags: [verify]
+
+- name: Verify Go removal
+  ansible.builtin.include_tasks: verify-absent.yml
+  when:
+    - golang_enabled
+    - golang_state == 'absent'
+  tags: [verify]

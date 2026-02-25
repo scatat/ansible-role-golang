@@ -1,0 +1,119 @@
+---
+# roles/golang/defaults/main.yml
+#
+# Shell-agnostic Go language SDK setup.
+# Exposes golang_shell_env as a loose interface for shell roles to consume.
+# Exposes golang_cache_dir for disk-cleanup integration.
+#
+# See: docs/05-ASSERTION-FRAMEWORK.md for contract patterns.
+
+# Enable/disable the role
+golang_enabled: true
+
+# Desired state: present (install if missing), latest (install or upgrade), absent (uninstall)
+golang_state: "present"
+
+# Package manager: extensible to other providers.
+# Add tasks/install-<manager>.yml + tasks/uninstall-<manager>.yml to support new ones.
+# Options: homebrew, tarball, apt, dnf
+golang_package_manager: "homebrew"
+
+# Go version — used by tarball method for download URL.
+# Homebrew manages its own version (latest stable).
+golang_version: "1.26.0"
+
+# Minimum acceptable version for verify assertions.
+# Catches L6 (version currency).
+golang_minimum_version: "1.22"
+
+# ---------------------------------------------------------------------------
+# Paths
+# ---------------------------------------------------------------------------
+
+# GOROOT: where the Go SDK lives.
+# Derived from package manager — each method installs to a different location.
+_golang_goroot_by_manager:
+  homebrew: "{{ homebrew_prefix | default('/opt/homebrew') }}/opt/go/libexec"
+  tarball: "{{ golang_tarball_install_dir }}"
+  apt: "/usr/lib/go"
+  dnf: "/usr/lib/golang"
+
+golang_goroot: "{{ _golang_goroot_by_manager[golang_package_manager] }}"
+
+# GOPATH: user workspace for go modules, packages, build artifacts.
+golang_gopath: "{{ ansible_user_home }}/go"
+
+# GOBIN: where `go install` puts binaries.
+golang_gobin: "{{ ansible_user_home }}/go/bin"
+
+# ---------------------------------------------------------------------------
+# Tarball-specific configuration
+# ---------------------------------------------------------------------------
+
+# Mirror URL for Go tarball downloads.
+golang_tarball_mirror: "https://go.dev/dl"
+
+# Installation directory for tarball method (extracted here).
+golang_tarball_install_dir: "/usr/local/go"
+
+# Architecture mapping: ansible_architecture → Go arch string.
+# Catches L7 (tarball arch mismatch).
+golang_arch_map:
+  x86_64: "amd64"
+  arm64: "arm64"
+  aarch64: "arm64"
+
+# OS mapping: ansible_system → Go OS string.
+golang_os_map:
+  Darwin: "darwin"
+  Linux: "linux"
+
+# Derived tarball filename (used internally by install-tarball.yml).
+golang_tarball_filename: "go{{ golang_version }}.{{ golang_os_map[ansible_system] }}-{{ golang_arch_map[ansible_architecture] }}.tar.gz"
+
+# Derived tarball URL.
+golang_tarball_url: "{{ golang_tarball_mirror }}/{{ golang_tarball_filename }}"
+
+# Directory for downloaded tarballs.
+golang_tarball_download_dir: "{{ ansible_user_home }}/.ansible/tmp/downloads"
+
+# ---------------------------------------------------------------------------
+# Uninstall options
+# ---------------------------------------------------------------------------
+
+# Clean go build cache on uninstall.
+# Catches L8 (uninstall completeness).
+golang_clean_cache_on_uninstall: true
+
+# ---------------------------------------------------------------------------
+# Extra environment variables (extensible)
+# ---------------------------------------------------------------------------
+
+# Add GOPROXY, GOPRIVATE, etc. when needed.
+# These merge into golang_shell_env.vars.
+# Example:
+#   golang_extra_env:
+#     GOPROXY: "https://proxy.golang.org,direct"
+#     GOPRIVATE: "github.com/transferwise/*"
+golang_extra_env: {}
+
+# ---------------------------------------------------------------------------
+# Shell-agnostic interface
+# ---------------------------------------------------------------------------
+# Any shell role consumes this dict. The golang role never writes shell config.
+# Fish: `set -x` + `fish_add_path`. Zsh/Bash: `export` + PATH.
+# Catches L4 (shell env export).
+
+golang_shell_env:
+  vars: "{{ {'GOPATH': golang_gopath, 'GOBIN': golang_gobin, 'GOROOT': golang_goroot} | combine(golang_extra_env) }}"
+  paths:
+    - "{{ golang_goroot }}/bin"
+    - "{{ golang_gobin }}"
+
+# ---------------------------------------------------------------------------
+# Cache path interface (for disk-cleanup role)
+# ---------------------------------------------------------------------------
+# Catches L9 (cache path coupling).
+# disk-cleanup should reference this instead of hardcoding.
+
+golang_cache_dir: "{{ (ansible_system == 'Darwin') | ternary(ansible_user_home + '/Library/Caches/go-build', ansible_user_home + '/.cache/go-build') }}"

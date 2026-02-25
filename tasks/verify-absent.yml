@@ -1,0 +1,40 @@
+---
+# roles/golang/tasks/verify-absent.yml
+# Assertions for Go uninstall (absent state).
+# Pattern: docs/05-ASSERTION-FRAMEWORK.md
+
+- name: "U1: go binary NOT at GOROOT"
+  # Catches L8: uninstall completeness
+  ansible.builtin.stat:
+    path: "{{ golang_goroot }}/bin/go"
+  register: u1_goroot_bin
+  failed_when: u1_goroot_bin.stat.exists
+  tags: [verify]
+
+- name: "U2: Go package absent"
+  # Catches L8: uninstall completeness
+  ansible.builtin.command: brew list go
+  register: u2_brew_check
+  changed_when: false
+  failed_when: u2_brew_check.rc == 0
+  when: golang_package_manager == 'homebrew'
+  tags: [verify]
+
+- name: "U2: Go tarball directory absent"
+  # Catches L8: uninstall completeness
+  ansible.builtin.stat:
+    path: "{{ golang_tarball_install_dir }}"
+  register: u2_tarball_dir
+  failed_when: u2_tarball_dir.stat.exists
+  when: golang_package_manager == 'tarball'
+  tags: [verify]
+
+- name: "VERIFY COMPLETE — golang (absent)"
+  ansible.builtin.debug:
+    msg:
+      - "============================================"
+      - "  golang UNINSTALL VERIFICATION COMPLETE"
+      - "============================================"
+      - "  U1  GOROOT binary absent:  ✅"
+      - "  U2  Package removed:       ✅"
+  tags: [verify]

@@ -1,0 +1,27 @@
+---
+# roles/golang/tasks/uninstall-tarball.yml
+# Uninstall Go tarball installation.
+# Catches L8: uninstall completeness.
+
+- name: Remove Go installation directory
+  ansible.builtin.file:
+    path: "{{ golang_tarball_install_dir }}"
+    state: absent
+  become: true
+
+- name: Clean Go build cache
+  ansible.builtin.file:
+    path: "{{ golang_cache_dir }}"
+    state: absent
+  when: golang_clean_cache_on_uninstall
+
+- name: Clean Go module cache
+  ansible.builtin.file:
+    path: "{{ golang_gopath }}/pkg/mod"
+    state: absent
+  when: golang_clean_cache_on_uninstall
+
+- name: Remove downloaded tarball
+  ansible.builtin.file:
+    path: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}"
+    state: absent

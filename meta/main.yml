@@ -1,0 +1,45 @@
+---
+# roles/golang/meta/main.yml
+# Galaxy metadata for scatat.golang
+
+galaxy_info:
+  role_name: golang
+  author: "Stephen Tan (scatat)"
+  description: >
+    Install and configure the Go language SDK with package manager abstraction
+    (Homebrew, tarball), shell-agnostic environment export, uninstall support,
+    and assertion-driven verification.
+  license: GPL-3.0-only
+  company: ""
+
+  min_ansible_version: "2.15"
+
+  platforms:
+    - name: MacOSX
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - jammy    # 22.04
+        - noble    # 24.04
+    - name: Debian
+      versions:
+        - bookworm # 12
+    - name: EL      # Rocky/Alma/RHEL
+      versions:
+        - "9"
+
+  galaxy_tags:
+    - golang
+    - go
+    - development
+    - homebrew
+    - macos
+    - linux
+    - shell
+
+  issue_tracker_url: "https://github.com/scatat/ansible-role-golang/issues"
+
+dependencies: []
+
+allow_duplicates: true

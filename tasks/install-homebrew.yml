@@ -1,0 +1,18 @@
+---
+# roles/golang/tasks/install-homebrew.yml
+# Install Go via Homebrew (macOS).
+# Catches L5: package manager assumption.
+
+- name: "{{ (golang_state == 'latest') | ternary('Upgrade', 'Install') }} Go via Homebrew"
+  community.general.homebrew:
+    name: go
+    state: "{{ golang_state }}"
+    update_homebrew: "{{ golang_state == 'latest' }}"
+  when: ansible_system == 'Darwin'
+
+- name: Fail if not macOS and homebrew selected
+  ansible.builtin.fail:
+    msg: >
+      golang_package_manager is 'homebrew' but ansible_system is '{{ ansible_system }}'.
+      Homebrew is only available on macOS. Use golang_package_manager: tarball for Linux.
+  when: ansible_system != 'Darwin'
