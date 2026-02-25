@@ -92,6 +92,37 @@ argument_specs:
           Additional environment variables merged into golang_shell_env.vars.
           Example: {GOPROXY: "https://proxy.golang.org,direct"}
 
+      golang_configure_profile:
+        type: bool
+        default: false
+        description: >
+          Write Go environment to a shell profile file. Default off — the role
+          exports golang_shell_env for shell roles to consume. Set to true for
+          a self-contained setup without a separate shell role.
+
+      golang_profile_path:
+        type: path
+        default: /etc/profile.d/golang.sh
+        description: >
+          Path to write the profile script. System-wide paths (starting with
+          /etc) automatically use become.
+
+      golang_export_facts:
+        type: bool
+        default: false
+        description: >
+          Export ansible_local.golang.general.* facts for cross-role discovery.
+          Writes to /etc/ansible/facts.d/golang.fact (requires become).
+
+      golang_packages:
+        type: list
+        elements: str
+        default: []
+        description: >
+          List of Go packages to install via 'go install'. Each entry should
+          include the @version suffix.
+          Example: ['golang.org/x/tools/gopls@latest']
+
       golang_arch_map:
         type: dict
         default:

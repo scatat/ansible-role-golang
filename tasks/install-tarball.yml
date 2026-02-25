@@ -3,11 +3,27 @@
 # Install Go from official tarball (cross-platform).
 # Catches L2 (GOROOT location), L7 (tarball arch).
 
+- name: Check currently installed Go version
+  ansible.builtin.command: "{{ golang_tarball_install_dir }}/bin/go version"
+  register: _golang_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Set tarball skip fact
+  ansible.builtin.set_fact:
+    _golang_tarball_skip: "{{ _golang_current_version.rc == 0 and ('go' + golang_version) in _golang_current_version.stdout }}"
+
+- name: "Skip tarball install — Go {{ golang_version }} already installed"
+  ansible.builtin.debug:
+    msg: "Go {{ golang_version }} already installed at {{ golang_tarball_install_dir }}, skipping download."
+  when: _golang_tarball_skip | bool
+
 - name: Ensure download directory exists
   ansible.builtin.file:
     path: "{{ golang_tarball_download_dir }}"
     state: directory
     mode: "0755"
+  when: not (_golang_tarball_skip | bool)
 
 - name: Download Go tarball
   ansible.builtin.get_url:
@@ -15,6 +31,7 @@
     dest: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}"
     mode: "0644"
   register: golang_download
+  when: not (_golang_tarball_skip | bool)
 
 - name: Download Go checksum file
   ansible.builtin.get_url:
@@ -22,17 +39,20 @@
     dest: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}.sha256"
     mode: "0644"
   register: golang_checksum_download
+  when: not (_golang_tarball_skip | bool)
 
 - name: Read expected checksum
   ansible.builtin.slurp:
     src: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}.sha256"
   register: golang_expected_checksum_raw
+  when: not (_golang_tarball_skip | bool)
 
 - name: Verify tarball checksum
   ansible.builtin.stat:
     path: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}"
     checksum_algorithm: sha256
   register: golang_tarball_stat
+  when: not (_golang_tarball_skip | bool)
 
 - name: "Assert: tarball checksum matches"
   ansible.builtin.assert:
@@ -43,13 +63,16 @@
       Expected: {{ golang_expected_checksum_raw.content | b64decode | trim }}
       Got: {{ golang_tarball_stat.stat.checksum }}
     success_msg: "Checksum verified for {{ golang_tarball_filename }}"
+  when: not (_golang_tarball_skip | bool)
 
 - name: Remove existing Go installation at tarball path
   ansible.builtin.file:
     path: "{{ golang_tarball_install_dir }}"
     state: absent
   become: true
-  when: golang_download.changed
+  when:
+    - not (_golang_tarball_skip | bool)
+    - golang_download.changed | default(false)
 
 - name: Extract Go tarball
   ansible.builtin.unarchive:
@@ -57,4 +80,6 @@
     dest: "{{ golang_tarball_install_dir | dirname }}"
     remote_src: true
   become: true
-  when: golang_download.changed
+  when:
+    - not (_golang_tarball_skip | bool)
+    - golang_download.changed | default(false)

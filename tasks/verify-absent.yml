@@ -1,7 +1,7 @@
 ---
 # roles/golang/tasks/verify-absent.yml
 # Assertions for Go uninstall (absent state).
-# Pattern: docs/05-ASSERTION-FRAMEWORK.md
+# Every U-assertion maps to an L (leaky abstraction) in README.md.
 
 - name: "U1: go binary NOT at GOROOT"
   # Catches L8: uninstall completeness
@@ -27,6 +27,24 @@
   register: u2_tarball_dir
   failed_when: u2_tarball_dir.stat.exists
   when: golang_package_manager == 'tarball'
+  tags: [verify]
+
+- name: "U2: Go apt package absent"
+  # Catches L8: uninstall completeness
+  ansible.builtin.command: dpkg -l golang-go
+  register: u2_apt_check
+  changed_when: false
+  failed_when: u2_apt_check.rc == 0
+  when: golang_package_manager == 'apt'
+  tags: [verify]
+
+- name: "U2: Go dnf package absent"
+  # Catches L8: uninstall completeness
+  ansible.builtin.command: rpm -q golang
+  register: u2_dnf_check
+  changed_when: false
+  failed_when: u2_dnf_check.rc == 0
+  when: golang_package_manager == 'dnf'
   tags: [verify]
 
 - name: "VERIFY COMPLETE — golang (absent)"

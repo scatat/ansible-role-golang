@@ -1,0 +1,15 @@
+---
+# roles/golang/tasks/packages.yml
+# Install Go packages via `go install`.
+# Requires Go to be installed and GOBIN to exist.
+
+- name: "Install Go package: {{ item }}"
+  ansible.builtin.command: "go install {{ item }}"
+  environment:
+    GOPATH: "{{ golang_gopath }}"
+    GOBIN: "{{ golang_gobin }}"
+    GOROOT: "{{ golang_goroot }}"
+    PATH: "{{ golang_goroot }}/bin:{{ golang_gobin }}:{{ ansible_env.PATH }}"
+  loop: "{{ golang_packages }}"
+  changed_when: true
+  tags: [golang, packages]

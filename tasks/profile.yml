@@ -1,0 +1,12 @@
+---
+# roles/golang/tasks/profile.yml
+# Optional: write Go environment to /etc/profile.d/ or a custom path.
+# Opt-in via golang_configure_profile: true (default: false).
+# This makes the role self-contained for users without a separate shell role.
+
+- name: Write Go environment to profile.d
+  ansible.builtin.template:
+    src: golang.sh.j2
+    dest: "{{ golang_profile_path }}"
+    mode: "0644"
+  become: "{{ golang_profile_path.startswith('/etc') }}"

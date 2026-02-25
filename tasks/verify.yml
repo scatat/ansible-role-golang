@@ -1,7 +1,6 @@
 ---
 # roles/golang/tasks/verify.yml
 # Assertion-driven verification for Go installation.
-# Pattern: docs/05-ASSERTION-FRAMEWORK.md
 # Every V-assertion maps to an L (leaky abstraction) in README.md.
 
 - name: "V1: go binary is executable"

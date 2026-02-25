@@ -10,7 +10,7 @@ verification.
 
 ## Design Principles
 
-This role follows the [ansible-mac assertion framework](../../docs/05-ASSERTION-FRAMEWORK.md):
+This role follows an assertion-driven design:
 
 - **Package manager abstraction:** `golang_package_manager` selects the install
   method. Add `tasks/install-<manager>.yml` to support new ones.
@@ -139,6 +139,15 @@ automatically:
 | `golang_tarball_install_dir` | `/usr/local/go` | Extract location |
 | `golang_tarball_download_dir` | `~/.ansible/tmp/downloads` | Download cache |
 
+### Features (opt-in)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `golang_packages` | `[]` | Go packages to install via `go install` (include `@version`) |
+| `golang_configure_profile` | `false` | Write env to `/etc/profile.d/golang.sh` (self-contained mode) |
+| `golang_profile_path` | `/etc/profile.d/golang.sh` | Custom profile path when `golang_configure_profile` is true |
+| `golang_export_facts` | `false` | Export `ansible_local.golang.general.*` facts for cross-role discovery |
+
 ### Extensible
 
 | Variable | Default | Description |
@@ -231,7 +240,7 @@ export PATH="{{ golang_shell_env.paths | join(':') }}:$PATH"
 
 | Gap | Why Not Asserted | Mitigation |
 |-----|-----------------|------------|
-| Go tools version (gopls) | Editor concern, not SDK | User manages via `go install` |
+| Go tools version (gopls) | Editor concern, not SDK | `golang_packages` installs them |
 | GOPROXY correctness | Org-specific | Extensible via `golang_extra_env` |
 | Shell env loaded in session | Requires interactive shell | V9 checks config file statically |
 
@@ -241,11 +250,10 @@ These are **not supported** by design:
 
 - **Multiple Go versions side-by-side** — Use [asdf](https://asdf-vm.com/) or
   [goenv](https://github.com/go-nv/goenv) for version switching.
-- **Third-party repository management** (PPAs, COPR) — If your distro’s Go is
+- **Third-party repository management** (PPAs, COPR) — If your distro's Go is
   too old, use `tarball` instead. Adding repos is your responsibility.
-- **Go tool installation** (gopls, golangci-lint) — Editor/project concern.
-  Install via `go install golang.org/x/tools/gopls@latest`.
 - **GOPROXY/GOPRIVATE** — Extensible via `golang_extra_env` when needed.
+- **Build Go from source** — Too niche for a general-purpose role.
 
 ## Supported Platforms
 

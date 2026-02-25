@@ -1,0 +1,7 @@
+# Managed by Ansible — scatat.golang role
+# Do not edit manually; changes will be overwritten on next role run.
+
+{% for var_name, var_value in golang_shell_env.vars.items() %}
+export {{ var_name }}="{{ var_value }}"
+{% endfor %}
+export PATH="{{ golang_shell_env.paths | join(':') }}:$PATH"

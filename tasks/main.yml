@@ -32,6 +32,30 @@
     - golang_enabled
     - golang_state == 'absent'
 
+- name: Configure shell profile
+  ansible.builtin.include_tasks: profile.yml
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+    - golang_configure_profile
+  tags: [profile]
+
+- name: Export golang facts
+  ansible.builtin.include_tasks: facts.yml
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+    - golang_export_facts
+  tags: [facts]
+
+- name: Install Go packages
+  ansible.builtin.include_tasks: packages.yml
+  when:
+    - golang_enabled
+    - golang_state in ['present', 'latest']
+    - golang_packages | length > 0
+  tags: [packages]
+
 - name: Verify Go installation
   ansible.builtin.include_tasks: verify.yml
   when:

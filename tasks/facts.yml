@@ -1,0 +1,34 @@
+---
+# roles/golang/tasks/facts.yml
+# Export ansible_local facts for cross-role discovery.
+# Other roles can use ansible_local.golang.general.version, .home, .gopath, .gobin.
+
+- name: Ensure facts.d directory exists
+  ansible.builtin.file:
+    path: /etc/ansible/facts.d
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Get installed Go version
+  ansible.builtin.command: go version
+  register: _golang_version_output
+  changed_when: false
+  environment:
+    PATH: "{{ golang_goroot }}/bin:{{ ansible_env.PATH }}"
+
+- name: Export golang ansible_local facts
+  ansible.builtin.copy:
+    content: |
+      {
+        "general": {
+          "version": "{{ _golang_version_output.stdout | regex_search('go([0-9.]+)', '\\1') | first }}",
+          "home": "{{ golang_goroot }}",
+          "gopath": "{{ golang_gopath }}",
+          "gobin": "{{ golang_gobin }}",
+          "package_manager": "{{ golang_package_manager }}"
+        }
+      }
+    dest: /etc/ansible/facts.d/golang.fact
+    mode: "0644"
+  become: true

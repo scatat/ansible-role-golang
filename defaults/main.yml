@@ -5,7 +5,7 @@
 # Exposes golang_shell_env as a loose interface for shell roles to consume.
 # Exposes golang_cache_dir for disk-cleanup integration.
 #
-# See: docs/05-ASSERTION-FRAMEWORK.md for contract patterns.
+# See README.md for contract patterns and leaky abstractions.
 
 # Enable/disable the role
 golang_enabled: true
@@ -84,6 +84,38 @@ golang_tarball_download_dir: "{{ ansible_user_home }}/.ansible/tmp/downloads"
 # Clean go build cache on uninstall.
 # Catches L8 (uninstall completeness).
 golang_clean_cache_on_uninstall: true
+
+# ---------------------------------------------------------------------------
+# Shell profile configuration (opt-in)
+# ---------------------------------------------------------------------------
+# Write Go environment to a shell profile file.
+# Default: false (the role exports golang_shell_env for shell roles to consume).
+# Set to true for a self-contained setup without a separate shell role.
+golang_configure_profile: false
+
+# Path to write the profile script.
+# Default: /etc/profile.d/golang.sh (system-wide, requires become).
+# Override for user-specific: "{{ ansible_user_home }}/.profile.d/golang.sh"
+golang_profile_path: "/etc/profile.d/golang.sh"
+
+# ---------------------------------------------------------------------------
+# Facts export (ansible_local)
+# ---------------------------------------------------------------------------
+# Export ansible_local.golang.general.* facts for cross-role discovery.
+# Writes to /etc/ansible/facts.d/golang.fact (requires become).
+# Other roles can then use: ansible_local.golang.general.version, .home, .gopath, .gobin
+golang_export_facts: false
+
+# ---------------------------------------------------------------------------
+# Go packages (installed via `go install`)
+# ---------------------------------------------------------------------------
+# List of Go packages to install. Each entry should include the @version suffix.
+# Example:
+#   golang_packages:
+#     - golang.org/x/tools/gopls@latest
+#     - github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+#     - github.com/go-delve/delve/cmd/dlv@latest
+golang_packages: []
 
 # ---------------------------------------------------------------------------
 # Extra environment variables (extensible)
