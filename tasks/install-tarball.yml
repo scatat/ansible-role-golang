@@ -29,40 +29,9 @@
   ansible.builtin.get_url:
     url: "{{ golang_tarball_url }}"
     dest: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}"
+    checksum: "sha256:{{ golang_tarball_url }}.sha256"
     mode: "0644"
   register: golang_download
-  when: not (_golang_tarball_skip | bool)
-
-- name: Download Go checksum file
-  ansible.builtin.get_url:
-    url: "{{ golang_tarball_url }}.sha256"
-    dest: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}.sha256"
-    mode: "0644"
-  register: golang_checksum_download
-  when: not (_golang_tarball_skip | bool)
-
-- name: Read expected checksum
-  ansible.builtin.slurp:
-    src: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}.sha256"
-  register: golang_expected_checksum_raw
-  when: not (_golang_tarball_skip | bool)
-
-- name: Verify tarball checksum
-  ansible.builtin.stat:
-    path: "{{ golang_tarball_download_dir }}/{{ golang_tarball_filename }}"
-    checksum_algorithm: sha256
-  register: golang_tarball_stat
-  when: not (_golang_tarball_skip | bool)
-
-- name: "Assert: tarball checksum matches"
-  ansible.builtin.assert:
-    that:
-      - golang_tarball_stat.stat.checksum == (golang_expected_checksum_raw.content | b64decode | trim | split(' ') | first)
-    fail_msg: >
-      Checksum mismatch for {{ golang_tarball_filename }}.
-      Expected: {{ golang_expected_checksum_raw.content | b64decode | trim }}
-      Got: {{ golang_tarball_stat.stat.checksum }}
-    success_msg: "Checksum verified for {{ golang_tarball_filename }}"
   when: not (_golang_tarball_skip | bool)
 
 - name: Remove existing Go installation at tarball path
