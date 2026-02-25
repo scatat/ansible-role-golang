@@ -53,13 +53,11 @@ argument_specs:
 
       golang_gopath:
         type: path
-        default: "{{ ansible_user_home }}/go"
         description: >
           GOPATH directory for modules, packages, and build artifacts.
 
       golang_gobin:
         type: path
-        default: "{{ ansible_user_home }}/go/bin"
         description: >
           GOBIN directory where 'go install' places binaries.
 
@@ -76,8 +74,9 @@ argument_specs:
 
       golang_tarball_download_dir:
         type: path
-        default: "{{ ansible_user_home }}/.ansible/tmp/downloads"
-        description: Directory for downloaded tarballs.
+        description: >-
+          Directory for downloaded tarballs. Defaults to
+          {{ ansible_user_home }}/.ansible/tmp/downloads at runtime.
 
       golang_clean_cache_on_uninstall:
         type: bool
