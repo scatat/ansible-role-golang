@@ -1,0 +1,8 @@
+---
+- name: Converge — install Go (will be uninstalled in side_effect)
+  hosts: all
+  roles:
+    - role: scatat.golang
+      vars:
+        golang_package_manager: tarball
+        golang_state: present
