@@ -1,0 +1,10 @@
+---
+- name: Converge — tarball install with Go packages
+  hosts: all
+  roles:
+    - role: scatat.golang
+      vars:
+        golang_package_manager: tarball
+        golang_state: present
+        golang_packages:
+          - golang.org/x/tools/cmd/goimports@latest

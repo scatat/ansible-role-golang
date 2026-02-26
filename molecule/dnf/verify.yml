@@ -1,0 +1,18 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Confirm Go is installed via dnf
+      ansible.builtin.command: /usr/lib/golang/bin/go version
+      register: go_ver
+      changed_when: false
+
+    - name: Print version
+      ansible.builtin.debug:
+        var: go_ver.stdout
+
+    - name: Confirm golang package is installed
+      ansible.builtin.command: rpm -q golang
+      register: rpm_check
+      changed_when: false
+      failed_when: rpm_check.rc != 0

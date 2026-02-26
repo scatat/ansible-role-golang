@@ -1,0 +1,14 @@
+---
+- name: Prepare — clean environment
+  hosts: all
+  become: true
+  tasks:
+    - name: Remove pre-installed Go (GHA runner ships with Go)
+      ansible.builtin.file:
+        path: /usr/local/go
+        state: absent
+
+    - name: Remove Go from PATH symlinks
+      ansible.builtin.file:
+        path: /usr/local/bin/go
+        state: absent

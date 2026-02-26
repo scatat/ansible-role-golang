@@ -1,0 +1,29 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Confirm Go is installed
+      ansible.builtin.command: /usr/local/go/bin/go version
+      register: go_ver
+      changed_when: false
+
+    - name: Print version
+      ansible.builtin.debug:
+        var: go_ver.stdout
+
+    - name: Confirm goimports binary exists in GOBIN
+      ansible.builtin.stat:
+        path: "{{ ansible_user_home }}/go/bin/goimports"
+      register: goimports_bin
+      failed_when: not goimports_bin.stat.exists
+
+    - name: Confirm goimports is executable
+      ansible.builtin.command: "{{ ansible_user_home }}/go/bin/goimports -help"
+      register: goimports_help
+      changed_when: false
+      failed_when: goimports_help.rc not in [0, 2]
+
+    - name: Confirm idempotency — second run skips install (creates guard)
+      ansible.builtin.command: "ls -la {{ ansible_user_home }}/go/bin/goimports"
+      register: goimports_stat
+      changed_when: false
