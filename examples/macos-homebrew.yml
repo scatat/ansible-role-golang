@@ -1,0 +1,13 @@
+# macOS Homebrew — standalone, go available in new shells after run
+#
+# Usage:
+#   ansible-galaxy install scatat.golang
+#   ansible-galaxy collection install community.general
+#   ansible-playbook examples/macos-homebrew.yml
+#
+- hosts: localhost
+  roles:
+    - role: scatat.golang
+      golang_package_manager: homebrew
+      golang_configure_profile: true
+      tags: [golang]

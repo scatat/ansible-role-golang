@@ -8,6 +8,82 @@ verification.
 **Galaxy:** `scatat.golang`
 **Minimum Ansible:** 2.15
 
+## Prerequisites
+
+- **Python 3.9+** and **pip**
+- **Ansible 2.15+:** `pip install ansible-core`
+- **community.general collection:** `ansible-galaxy collection install community.general`
+- **Homebrew** (macOS only, if using `golang_package_manager: homebrew`)
+
+## Quick Start
+
+### Install the Role
+
+```bash
+ansible-galaxy install scatat.golang
+```
+
+Or add to `requirements.yml`:
+
+```yaml
+roles:
+  - src: scatat.golang
+```
+
+### Standalone Playbook
+
+If you don't have a separate shell configuration role, enable
+`golang_configure_profile` so that `go` is available in new shells immediately:
+
+```yaml
+# playbook.yml
+- hosts: localhost
+  roles:
+    - role: scatat.golang
+      golang_configure_profile: true
+      tags: [golang]
+```
+
+### With a Shell Role
+
+If a shell role (e.g., fish-setup) consumes `golang_shell_env`, omit
+`golang_configure_profile`:
+
+```yaml
+- hosts: localhost
+  roles:
+    - role: scatat.golang
+      tags: [golang]
+    - role: fish-setup
+      tags: [fish]
+```
+
+### Common Commands
+
+```bash
+# Install (default: Homebrew on macOS)
+ansible-playbook playbook.yml --tags golang
+
+# Verify only
+ansible-playbook playbook.yml --tags verify
+
+# Upgrade to latest available
+ansible-playbook playbook.yml --tags golang -e golang_state=latest
+
+# Uninstall
+ansible-playbook playbook.yml --tags golang -e golang_state=absent
+```
+
+### Available Tags
+
+| Tag | Scope |
+|-----|-------|
+| `golang` | Full role (install/upgrade/uninstall + all sub-tasks) |
+| `verify` | Assertions only (V1-V7) |
+| `profile` | Shell profile configuration only |
+| `facts` | Ansible local facts export only |
+| `packages` | Go package installation only |
+
 ## Design Principles
 
 This role follows an assertion-driven design:
@@ -23,30 +99,6 @@ This role follows an assertion-driven design:
   installs, missing directories, arch mismatches, and broken GOROOT.
 - **Uninstall support:** `golang_state: absent` cleanly removes Go and
   optionally clears the build cache.
-
-## Quick Start
-
-```yaml
-# playbook.yml
-- hosts: localhost
-  roles:
-    - role: golang
-      tags: [golang]
-```
-
-```bash
-# Install (default: Homebrew on macOS)
-ansible-playbook playbook.yml --tags golang
-
-# Verify only
-ansible-playbook playbook.yml --tags verify
-
-# Upgrade to latest available
-ansible-playbook playbook.yml --tags golang -e golang_state=latest
-
-# Uninstall
-ansible-playbook playbook.yml --tags golang -e golang_state=absent
-```
 
 ## Version Management
 
