@@ -84,6 +84,22 @@ ansible-playbook playbook.yml --tags golang -e golang_state=absent
 | `facts` | Ansible local facts export only |
 | `packages` | Go package installation only |
 
+### Privilege Escalation (`become`)
+
+Some tasks require `become: true` depending on the package manager:
+
+| Package Manager | `become` Required | Why |
+|-----------------|-------------------|-----|
+| `homebrew` | No | Homebrew runs as the current user |
+| `tarball` | **Yes** | Installs to `/usr/local/go` (root-owned) |
+| `apt` | **Yes** | System package manager requires root |
+| `dnf` | **Yes** | System package manager requires root |
+
+Additionally, `golang_configure_profile: true` writes to `/etc/profile.d/` (requires
+`become`), and `golang_export_facts: true` writes to `/etc/ansible/facts.d/` (requires
+`become`). The role applies `become` per-task where needed — you do **not** need to set
+`become: true` at the play level unless using tarball, apt, or dnf.
+
 ## Design Principles
 
 This role follows an assertion-driven design:

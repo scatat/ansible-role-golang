@@ -42,5 +42,3 @@ galaxy_info:
   issue_tracker_url: "https://github.com/scatat/ansible-role-golang/issues"
 
 dependencies: []
-
-allow_duplicates: true

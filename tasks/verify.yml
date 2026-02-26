@@ -15,13 +15,19 @@
   # Catches L6: version currency
   ansible.builtin.shell: |
     set -eo pipefail
-    version=$({{ golang_goroot }}/bin/go version | grep -oE 'go1\.([0-9]+)' | head -1 | sed 's/go1\.//')
-    minimum=$(echo "{{ golang_minimum_version }}" | sed 's/1\.//')
-    if [ "$version" -lt "$minimum" ]; then
-      echo "FAIL: go1.${version} < minimum 1.${minimum}"
-      exit 1
+    installed=$({{ golang_goroot }}/bin/go version | grep -oE 'go[0-9]+\.[0-9]+' | head -1 | sed 's/go//')
+    minimum="{{ golang_minimum_version }}"
+    inst_major=$(echo "$installed" | cut -d. -f1)
+    inst_minor=$(echo "$installed" | cut -d. -f2)
+    min_major=$(echo "$minimum" | cut -d. -f1)
+    min_minor=$(echo "$minimum" | cut -d. -f2)
+    if [ "$inst_major" -gt "$min_major" ] || \
+       { [ "$inst_major" -eq "$min_major" ] && [ "$inst_minor" -ge "$min_minor" ]; }; then
+      echo "OK: ${installed} >= ${minimum}"
+      exit 0
     fi
-    echo "OK: go1.${version} >= minimum 1.${minimum}"
+    echo "FAIL: ${installed} < minimum ${minimum}"
+    exit 1
   args:
     executable: /bin/bash
   register: v2_version_check
@@ -70,11 +76,17 @@
 - name: "V7: resolve both GOROOT paths (follow symlinks)"
   # Catches L5: package manager assumption
   # Resolve both paths so symlink vs Cellar differences don't cause false failures.
-  ansible.builtin.command: >-
-    python3 -c "import os; expected=os.path.realpath('{{ golang_goroot }}');
-    actual=os.path.realpath('{{ v7_goroot_raw.stdout | trim }}');
-    print(f'{actual}|{expected}');
-    raise SystemExit(0 if actual == expected else 1)"
+  # Uses POSIX pwd -P instead of python3 for portability.
+  ansible.builtin.shell: |
+    expected=$(cd "{{ golang_goroot }}" && pwd -P)
+    actual=$(cd "{{ v7_goroot_raw.stdout | trim }}" && pwd -P)
+    if [ "$expected" = "$actual" ]; then
+      echo "${actual}|${expected}"
+      exit 0
+    else
+      echo "FAIL: actual=${actual} != expected=${expected}"
+      exit 1
+    fi
   register: v7_goroot
   changed_when: false
   failed_when: v7_goroot.rc != 0

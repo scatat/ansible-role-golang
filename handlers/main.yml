@@ -1,0 +1,8 @@
+---
+# roles/golang/handlers/main.yml
+# Fired when Go is installed or upgraded.
+# Sets golang_version_changed fact for downstream roles to check.
+
+- name: golang version changed
+  ansible.builtin.set_fact:
+    golang_version_changed: true

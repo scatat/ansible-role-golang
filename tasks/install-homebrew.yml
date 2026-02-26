@@ -9,6 +9,7 @@
     state: "{{ golang_state }}"
     update_homebrew: "{{ golang_state == 'latest' }}"
   when: ansible_system == 'Darwin'
+  notify: golang version changed
 
 - name: Fail if not macOS and homebrew selected
   ansible.builtin.fail:

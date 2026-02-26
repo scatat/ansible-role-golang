@@ -10,6 +10,7 @@
     GOBIN: "{{ golang_gobin }}"
     GOROOT: "{{ golang_goroot }}"
     PATH: "{{ golang_goroot }}/bin:{{ golang_gobin }}:{{ ansible_env.PATH }}"
+  args:
+    creates: "{{ golang_gobin }}/{{ item | regex_replace('@.*$', '') | split('/') | last }}"
   loop: "{{ golang_packages }}"
-  changed_when: true
   tags: [golang, packages]
