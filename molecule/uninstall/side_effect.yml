@@ -1,0 +1,8 @@
+---
+- name: Side Effect — uninstall Go
+  hosts: all
+  roles:
+    - role: scatat.golang
+      vars:
+        golang_package_manager: tarball
+        golang_state: absent

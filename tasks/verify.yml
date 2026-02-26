@@ -5,7 +5,7 @@
 
 - name: "V1: go binary is executable"
   # Catches L1: Go binary in PATH
-  ansible.builtin.command: go version
+  ansible.builtin.command: "{{ golang_goroot }}/bin/go version"
   register: v1_go_version
   changed_when: false
   failed_when: v1_go_version.rc != 0
@@ -14,14 +14,16 @@
 - name: "V2: go version meets minimum (>= {{ golang_minimum_version }})"
   # Catches L6: version currency
   ansible.builtin.shell: |
-    set -e
-    version=$(go version | grep -oE 'go1\.([0-9]+)' | head -1 | sed 's/go1\.//')
+    set -eo pipefail
+    version=$({{ golang_goroot }}/bin/go version | grep -oE 'go1\.([0-9]+)' | head -1 | sed 's/go1\.//')
     minimum=$(echo "{{ golang_minimum_version }}" | sed 's/1\.//')
     if [ "$version" -lt "$minimum" ]; then
       echo "FAIL: go1.${version} < minimum 1.${minimum}"
       exit 1
     fi
     echo "OK: go1.${version} >= minimum 1.${minimum}"
+  args:
+    executable: /bin/bash
   register: v2_version_check
   changed_when: false
   failed_when: v2_version_check.rc != 0
@@ -53,18 +55,29 @@
 
 - name: "V6: go binary architecture matches host"
   # Catches L7: tarball arch mismatch
-  ansible.builtin.command: go env GOARCH
+  ansible.builtin.command: "{{ golang_goroot }}/bin/go env GOARCH"
   register: v6_goarch
   changed_when: false
   failed_when: v6_goarch.stdout | trim != golang_arch_map[ansible_architecture]
   tags: [verify]
 
-- name: "V7: go binary at expected GOROOT"
+- name: "V7: get actual GOROOT from go env"
+  ansible.builtin.command: "{{ golang_goroot }}/bin/go env GOROOT"
+  register: v7_goroot_raw
+  changed_when: false
+  tags: [verify]
+
+- name: "V7: resolve both GOROOT paths (follow symlinks)"
   # Catches L5: package manager assumption
-  ansible.builtin.command: go env GOROOT
+  # Resolve both paths so symlink vs Cellar differences don't cause false failures.
+  ansible.builtin.command: >-
+    python3 -c "import os; expected=os.path.realpath('{{ golang_goroot }}');
+    actual=os.path.realpath('{{ v7_goroot_raw.stdout | trim }}');
+    print(f'{actual}|{expected}');
+    raise SystemExit(0 if actual == expected else 1)"
   register: v7_goroot
   changed_when: false
-  failed_when: v7_goroot.stdout | trim | regex_replace('/$', '') != golang_goroot
+  failed_when: v7_goroot.rc != 0
   tags: [verify]
 
 - name: "VERIFY COMPLETE — golang"

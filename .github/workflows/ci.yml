@@ -1,0 +1,74 @@
+---
+name: CI
+
+"on":
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * 4"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: scatat.golang
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip3 install yamllint ansible-lint ansible
+
+      - name: YAML Lint
+        run: yamllint .
+        working-directory: scatat.golang
+
+      - name: Ansible Lint
+        run: ansible-lint
+        working-directory: scatat.golang
+
+  molecule:
+    name: "Molecule (${{ matrix.scenario }})"
+    runs-on: "${{ matrix.runner }}"
+    needs: lint
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scenario: default
+            runner: macos-latest
+          - scenario: tarball
+            runner: ubuntu-latest
+          - scenario: uninstall
+            runner: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: scatat.golang
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip3 install molecule molecule-plugins ansible
+
+      - name: Run Molecule
+        run: molecule test -s ${{ matrix.scenario }}
+        working-directory: scatat.golang
+        env:
+          ANSIBLE_FORCE_COLOR: "1"

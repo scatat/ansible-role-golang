@@ -1,0 +1,12 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Confirm Go is installed
+      ansible.builtin.command: go version
+      register: go_ver
+      changed_when: false
+
+    - name: Print version
+      ansible.builtin.debug:
+        var: go_ver.stdout

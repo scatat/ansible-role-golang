@@ -1,0 +1,25 @@
+---
+- name: Verify — Go is removed
+  hosts: all
+  tasks:
+    - name: Check Go binary is absent
+      ansible.builtin.stat:
+        path: /usr/local/go/bin/go
+      register: go_binary
+
+    - name: Assert Go binary removed
+      ansible.builtin.assert:
+        that: not go_binary.stat.exists
+        fail_msg: "Go binary still exists at /usr/local/go/bin/go"
+        success_msg: "Go binary correctly removed"
+
+    - name: Check Go install directory is absent
+      ansible.builtin.stat:
+        path: /usr/local/go
+      register: go_dir
+
+    - name: Assert Go directory removed
+      ansible.builtin.assert:
+        that: not go_dir.stat.exists
+        fail_msg: "Go directory still exists at /usr/local/go"
+        success_msg: "Go directory correctly removed"
