@@ -61,20 +61,23 @@
   failed_when: v6_goarch.stdout | trim != golang_arch_map[ansible_architecture]
   tags: [verify]
 
-- name: "V7: resolve expected GOROOT (follow symlinks)"
-  ansible.builtin.command: python3 -c "import os; print(os.path.realpath('{{ golang_goroot }}'))"
-  register: v7_expected_goroot
+- name: "V7: get actual GOROOT from go env"
+  ansible.builtin.command: "{{ golang_goroot }}/bin/go env GOROOT"
+  register: v7_goroot_raw
   changed_when: false
   tags: [verify]
 
-- name: "V7: go binary at expected GOROOT"
+- name: "V7: resolve both GOROOT paths (follow symlinks)"
   # Catches L5: package manager assumption
-  ansible.builtin.command: "{{ golang_goroot }}/bin/go env GOROOT"
+  # Resolve both paths so symlink vs Cellar differences don't cause false failures.
+  ansible.builtin.command: >-
+    python3 -c "import os; expected=os.path.realpath('{{ golang_goroot }}');
+    actual=os.path.realpath('{{ v7_goroot_raw.stdout | trim }}');
+    print(f'{actual}|{expected}');
+    raise SystemExit(0 if actual == expected else 1)"
   register: v7_goroot
   changed_when: false
-  failed_when: >-
-    v7_goroot.stdout | trim | regex_replace('/$', '') !=
-    v7_expected_goroot.stdout | trim | regex_replace('/$', '')
+  failed_when: v7_goroot.rc != 0
   tags: [verify]
 
 - name: "VERIFY COMPLETE — golang"
@@ -89,5 +92,5 @@
       - "  V4  GOPATH exists:               ✅  {{ golang_gopath }}"
       - "  V5  GOBIN exists:                ✅  {{ golang_gobin }}"
       - "  V6  arch matches host:           ✅  {{ v6_goarch.stdout | trim }}"
-      - "  V7  GOROOT matches expected:     ✅  {{ v7_goroot.stdout | trim }} (expected: {{ v7_expected_goroot.stdout | trim }})"
+      - "  V7  GOROOT matches expected:     ✅  {{ v7_goroot.stdout | trim }}"
   tags: [verify]
