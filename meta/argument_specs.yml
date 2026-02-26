@@ -55,16 +55,26 @@ argument_specs:
         type: path
         description: >
           GOPATH directory for modules, packages, and build artifacts.
+          Defaults to ~/go.
 
       golang_gobin:
         type: path
         description: >
           GOBIN directory where 'go install' places binaries.
+          Defaults to ~/go/bin.
 
       golang_tarball_mirror:
         type: str
         default: "https://go.dev/dl"
         description: Mirror URL for Go tarball downloads.
+
+      golang_tarball_checksum_mirror:
+        type: str
+        default: "https://dl.google.com/go"
+        description: >
+          Mirror URL for Go checksum files. go.dev/dl uses HTML meta-refresh
+          for .sha256 files which Ansible cannot follow. Defaults to the
+          Google CDN where actual checksums are served.
 
       golang_tarball_install_dir:
         type: path
@@ -74,9 +84,9 @@ argument_specs:
 
       golang_tarball_download_dir:
         type: path
-        description: >-
-          Directory for downloaded tarballs. Defaults to
-          ~/. ansible/tmp/downloads at runtime (derived from ansible_user_home).
+        description: >
+          Directory for downloaded tarballs.
+          Defaults to ~/.ansible/tmp/downloads.
 
       golang_clean_cache_on_uninstall:
         type: bool
