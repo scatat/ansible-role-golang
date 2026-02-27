@@ -12,7 +12,9 @@
         var: go_ver.stdout
 
     - name: Confirm golang package is installed
-      ansible.builtin.command: rpm -q golang
-      register: rpm_check
-      changed_when: false
-      failed_when: rpm_check.rc != 0
+      ansible.builtin.dnf:
+        name: golang
+        state: present
+      check_mode: true
+      register: dnf_check
+      failed_when: dnf_check.changed

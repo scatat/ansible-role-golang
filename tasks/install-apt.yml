@@ -21,4 +21,4 @@
     update_cache: "{{ golang_state == 'latest' }}"
   become: true
   when: ansible_os_family == 'Debian'
-  notify: golang version changed
+  notify: Golang version changed

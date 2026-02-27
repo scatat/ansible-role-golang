@@ -20,4 +20,4 @@
     state: "{{ golang_state }}"
   become: true
   when: ansible_os_family == 'RedHat'
-  notify: golang version changed
+  notify: Golang version changed

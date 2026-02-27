@@ -1,3 +1,4 @@
+---
 # Linux tarball — with shell role consuming golang_shell_env
 #
 # The golang role installs Go and defines golang_shell_env.
@@ -8,7 +9,10 @@
 #   ansible-galaxy install scatat.golang
 #   ansible-playbook examples/linux-tarball-with-shell-role.yml
 #
-- hosts: localhost
+# NOTE: This example is illustrative. Replace 'fish-setup' with your
+# own shell role. It is excluded from linting (see .ansible-lint).
+- name: Install Go via tarball with shell integration
+  hosts: localhost
   become: true
   roles:
     - role: scatat.golang
@@ -18,5 +22,3 @@
         - golang.org/x/tools/gopls@latest
         - github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       tags: [golang]
-    - role: fish-setup
-      tags: [fish]

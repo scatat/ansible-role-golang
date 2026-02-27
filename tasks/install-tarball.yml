@@ -65,4 +65,4 @@
   when:
     - not (_golang_tarball_skip | bool)
     - golang_download.changed | default(false)
-  notify: golang version changed
+  notify: Golang version changed

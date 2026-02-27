@@ -1,10 +1,12 @@
+---
 # Linux tarball — pinned version, standalone, go available in new shells
 #
 # Usage:
 #   ansible-galaxy install scatat.golang
 #   ansible-playbook examples/linux-tarball-standalone.yml
 #
-- hosts: localhost
+- name: Install Go via tarball (standalone)
+  hosts: localhost
   become: true
   roles:
     - role: scatat.golang

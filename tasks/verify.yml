@@ -78,6 +78,7 @@
   # Resolve both paths so symlink vs Cellar differences don't cause false failures.
   # Uses POSIX pwd -P instead of python3 for portability.
   ansible.builtin.shell: |
+    set -eo pipefail
     expected=$(cd "{{ golang_goroot }}" && pwd -P)
     actual=$(cd "{{ v7_goroot_raw.stdout | trim }}" && pwd -P)
     if [ "$expected" = "$actual" ]; then
@@ -87,6 +88,8 @@
       echo "FAIL: actual=${actual} != expected=${expected}"
       exit 1
     fi
+  args:
+    executable: /bin/bash
   register: v7_goroot
   changed_when: false
   failed_when: v7_goroot.rc != 0
