@@ -53,6 +53,8 @@ def run_assertions(home_dir, package_manager):
 
     # V9: Fish config contains golang env exports
     # Catches L4: shell env export
+    # Skip: Only relevant when fish-setup role has been applied.
+    # In standalone or CI contexts, fish config won't exist.
     fish_config = os.path.join(home_dir, ".config", "fish", "config.fish")
     if os.path.isfile(fish_config):
         with open(fish_config) as f:
@@ -70,8 +72,8 @@ def run_assertions(home_dir, package_manager):
             missing.append("GOROOT")
         detail = f"fish config: {'all present' if passed else 'missing: ' + ', '.join(missing)}"
     else:
-        passed = False
-        detail = f"Fish config not found: {fish_config}"
+        passed = None
+        detail = f"SKIP — fish config not found: {fish_config}"
     results.append(("V9", "Fish config has golang exports", passed, detail))
 
     # V10: disk-cleanup cache path matches golang_cache_dir
@@ -93,8 +95,8 @@ def run_assertions(home_dir, package_manager):
             f"hardcoded go-build: {has_hardcoded}"
         )
     else:
-        passed = False
-        detail = f"disk-cleanup defaults not found: {disk_cleanup_defaults}"
+        passed = None
+        detail = f"SKIP — disk-cleanup role not found: {disk_cleanup_defaults}"
     results.append(("V10", "disk-cleanup uses golang_cache_dir", passed, detail))
 
     # V11: Binary file arch matches host
@@ -138,10 +140,11 @@ def run_assertions(home_dir, package_manager):
 if __name__ == "__main__":
     home, pkg_mgr = get_args()
     results = run_assertions(home, pkg_mgr)
-    passed_count = sum(1 for _, _, p, _ in results if p)
-    failed_count = sum(1 for _, _, p, _ in results if not p)
+    passed_count = sum(1 for _, _, p, _ in results if p is True)
+    failed_count = sum(1 for _, _, p, _ in results if p is False)
+    skipped_count = sum(1 for _, _, p, _ in results if p is None)
     for vid, desc, ok, detail in results:
-        status = "PASS" if ok else "FAIL"
+        status = "PASS" if ok is True else ("SKIP" if ok is None else "FAIL")
         print(f"{vid}: {desc} — {status}  {detail}")
-    print(f"\n{passed_count} passed, {failed_count} failed out of {len(results)} assertions")
+    print(f"\n{passed_count} passed, {skipped_count} skipped, {failed_count} failed out of {len(results)} assertions")
     sys.exit(0 if failed_count == 0 else 1)
